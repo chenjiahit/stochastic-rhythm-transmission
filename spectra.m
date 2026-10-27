@@ -9,7 +9,7 @@ p.epsilon = 1;
 p.phi = 0;
 gammas = [0.1,1.5];
 dt = 0.01;
-T = 5e3; % long observation improves the empirical spectral estimate
+T = 1e4; % long observation improves the empirical spectral estimate
 segmentLength = 1e4; % duration 163.84 h; 50% overlap
 burn = max(20*p.Tu,12/min(gammas));
 
@@ -35,43 +35,41 @@ omegaLimit = 3*(2*pi/p.Tu);
 mask = omega>0 & omega<=omegaLimit;
 
 %% Raw spectra: direct comparison tests absolute normalization as well
-% fig = figure('Color','w','Position',[70,60,1150,600]);
-% for j = 1:numel(gammas)+1
-%     subplot(2,ceil((numel(gammas)+1)/2),j);
-%     semilogy(omega(mask),P(mask,j),'Color',[.65,.72,.82],'LineWidth',0.8); hold on;
-%     semilogy(omega(mask),theory(mask,j),'Color',[.05,.25,.65],'LineWidth',1.7);
-%     plot(0,reference(j),'o','Color',[.75,.15,.12],'MarkerFaceColor',[.75,.15,.12]);
-%     if j==1
-%         title('Upstream driving U_t'); ylabel('G_u(omega)');
-%     else
-%         title(sprintf('Downstream: gamma = %.3g',gammas(j-1)));
-%         ylabel('G(omega)');
-%     end
-%     xlabel('Angular frequency omega (rad)');
-%     xlim([0,omegaLimit]); grid on; box off;
-%     legend('Simulation: Welch','Exact continuous-time PSD','Exact PSD at zero', ...
-%            'Location','best');
-%     set(gca,'FontSize',10);
-% end
+fig = figure('Color','w','Position',[70,60,1150,600]);
+for j = 1:numel(gammas)+1
+    subplot(2,ceil((numel(gammas)+1)/2),j);
+    semilogy(omega(mask),P(mask,j),'Color',[.65,.72,.82],'LineWidth',0.8); hold on;
+    semilogy(omega(mask),theory(mask,j),'Color',[.05,.25,.65],'LineWidth',1.7);
+    plot(0,reference(j),'o','Color',[.75,.15,.12],'MarkerFaceColor',[.75,.15,.12]);
+    if j==1
+        title('Upstream driving U_t'); ylabel('G_u(omega)');
+    else
+        title(sprintf('Downstream: gamma = %.3g',gammas(j-1)));
+        ylabel('G(omega)');
+    end
+    xlabel('Angular frequency omega (rad)');
+    xlim([0,omegaLimit]); grid on; box off;
+    legend('Simulation: Welch','Exact continuous-time PSD','Exact PSD at zero', ...
+           'Location','best');
+    set(gca,'FontSize',10);
+end
 
 %% Normalized theoretical spectra: peaks above one have positive efficiency
 maxnum = 4001; itv = 200;
 omegaFine = linspace(0,omegaLimit,maxnum)';
 [GuFine,GFine] = ring_spectra(p,omegaFine,gammas);
-% figNormalized = figure('Color','w','Position',[110,100,1020,570]);
+figNormalized = figure('Color','w','Position',[110,100,1020,570]);
 plot(omegaFine,GuFine/Gu0,'k','LineWidth',1.5); hold on;
-plot(omegaFine(1:itv:maxnum),GuFine(1:itv:maxnum)/Gu0,'ko','Markersize',7); hold on
 colors = lines(numel(gammas));
 labels = {'Upstream: G_u / G_u(0)'};
 for j = 1:numel(gammas)
     plot(omegaFine,GFine(:,j)/G0(j),'Color',colors(j,:),'LineWidth',1.5); hold on
-    plot(omegaFine(1:itv:maxnum),GFine(1:itv:maxnum,j)/G0(j),'ro','Markersize',7); hold on
     labels{end+1} = sprintf('Downstream: gamma = %.3g',gammas(j)); %#ok<SAGROW>
 end
-% yline(1,':','Color',[.5,.5,.5],'HandleVisibility','off');
-% xlabel('Angular frequency omega (rad)');
-% ylabel('Spectrum / zero-frequency spectrum');
-% title(sprintf('Exact spectral transmission: R = %.3g, gamma_c = %.3g',R,gc));
+yline(1,':','Color',[.5,.5,.5],'HandleVisibility','off');
+xlabel('Angular frequency omega (rad)');
+ylabel('Spectrum / zero-frequency spectrum');
+title(sprintf('Exact spectral transmission: R = %.3g, gamma_c = %.3g',R,gc));
 legend(labels,'Location','northeast');
 grid off; box off;
 set(gca,'FontSize',12); xlim([0,omegaLimit]);
